@@ -1,10 +1,13 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+
+	"github.com/codegangsta/cli"
 )
 
 func homepath(p string) string {
@@ -19,7 +22,16 @@ func getDiscovery(c *cli.Context) string {
 	if len(c.Args()) == 1 {
 		return c.Args()[0]
 	}
-	return os.Getenv("SWARM_DISCOVERY")
+	if stat, err := os.Stdin.Stat(); err != nil || stat.Size() == 0 {
+		return os.Getenv("SWARM_DISCOVERY")
+	}
+
+	in, err := ioutil.ReadAll(os.Stdin)
+	disc := string(in)
+	if err != nil || disc == "" {
+		return os.Getenv("SWARM_DISCOVERY")
+	}
+	return strings.Join(strings.Fields(disc), ",")
 }
 
 var (
